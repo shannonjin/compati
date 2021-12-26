@@ -144,6 +144,7 @@ let check (globals, functions) =
           in 
           let args' = List.map2 check_call fd.formals args
           in (fd.typ, SCall(fname, args'))
+      (*| Access() *)
     in
 
     let check_bool_expr e = 

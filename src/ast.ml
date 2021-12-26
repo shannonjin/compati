@@ -5,7 +5,7 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not
 
-type typ = Int | Bool | Float | Void
+type typ = Int | Bool | Float | Void | Struct
 
 type bind = typ * string
 
@@ -18,6 +18,7 @@ type expr =
   | Unop of uop * expr
   | Assign of string * expr
   | Call of string * expr list
+  | Access of string * expr
   | Noexpr
 
 type stmt =
@@ -34,6 +35,11 @@ type func_decl = {
     formals : bind list;
     locals : bind list;
     body : stmt list;
+  }
+
+  type struct_defn = {
+    fname : string;
+    body : bind list;
   }
 
 type program = bind list * func_decl list
