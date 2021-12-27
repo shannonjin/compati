@@ -57,6 +57,7 @@ typ:
   | BOOL  { Bool  }
   | FLOAT { Float }
   | VOID  { Void  }
+  | STRUCT ID { Struct }
 
 vdecl_list:
     /* nothing */    { [] }
@@ -64,6 +65,12 @@ vdecl_list:
 
 vdecl:
    typ ID SEMI { ($1, $2) }
+
+struct_defn:
+  STRUCT ID LBRACE vdecl_list RBRACE      
+  { { sname = $2;
+	 body = List.rev $4 } }
+
 
 stmt_list:
     /* nothing */  { [] }
@@ -75,7 +82,7 @@ stmt:
   | LBRACE stmt_list RBRACE                 { Block(List.rev $2)    }
   | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
   | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7)        }
-  | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN stmt
+  | FOR LPAREN expr_opt SEMI expr SEMI expr_opt RPAREN  stmt
                                             { For($3, $5, $7, $9)   }
   | WHILE LPAREN expr RPAREN stmt           { While($3, $5)         }
 
@@ -85,7 +92,7 @@ expr_opt:
 
 expr:
     LITERAL          { Literal($1)            }
-  | FLIT	     { Fliteral($1)           }
+  | FLIT	           { Fliteral($1)           }
   | BLIT             { BoolLit($1)            }
   | ID               { Id($1)                 }
   | expr PLUS   expr { Binop($1, Add,   $3)   }
@@ -105,6 +112,7 @@ expr:
   | ID ASSIGN expr   { Assign($1, $3)         }
   | ID LPAREN args_opt RPAREN { Call($1, $3)  }
   | LPAREN expr RPAREN { $2                   }
+  | ID DOT           { Access($1)             }
 
 args_opt:
     /* nothing */ { [] }

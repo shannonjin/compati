@@ -83,6 +83,12 @@ let check (globals, functions) =
   (* Collect all function names into one symbol table *)
   let struct_defns = List.fold_left add_struct structs
   in
+
+  (* structs are type, function and other symbols are data
+  only declare structs at the beginning of the program (before everything else)
+  define the struct and then use it 
+  *)
+
   
   (* Build local symbol table of variables for this struct *)
   let struct_symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
@@ -207,4 +213,4 @@ let check (globals, functions) =
 	SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
-  in (globals, List.map check_function functions)
+  in (globals, List.map check_function functions) (*map for types*)
