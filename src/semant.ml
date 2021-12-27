@@ -68,6 +68,27 @@ let check (globals, functions) =
 
   let _ = find_func "main" in (* Ensure "main" is defined *)
 
+  (* Add struct name to symbol table *)
+  let add_struct struct_map st= 
+    let built_in_err = "struct " ^ st.sname ^ " may not be defined"
+    and dup_err = "duplicate struct definition " ^ st.same
+    and make_err er = raise (Failure er)
+    and n = st.sname (* Name of the struct*)
+    in match st with (* No duplicate struct or redefinitions of built-ins *)
+         _ when StringMap.mem n built_in_decls -> make_err built_in_err
+       | _ when StringMap.mem n struct_map -> make_err dup_err  
+       | _ ->  StringMap.add n st struct_map 
+  in
+
+  (* Collect all function names into one symbol table *)
+  let struct_defns = List.fold_left add_struct structs
+  in
+  
+  (* Build local symbol table of variables for this struct *)
+  let struct_symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
+  StringMap.empty (st.body )
+  in
+
   let check_function func =
     (* Make sure no formals or locals are void or duplicates *)
     check_binds "formal" func.formals;
