@@ -57,7 +57,7 @@ typ:
   | BOOL  { Bool  }
   | FLOAT { Float }
   | VOID  { Void  }
-  | STRUCT ID { Struct }
+  | STRUCT ID { Struct($2) }
 
 vdecl_list:
     /* nothing */    { [] }
