@@ -69,7 +69,7 @@ vdecl:
 struct_defn:
   STRUCT ID LBRACE vdecl_list RBRACE      
   { { sname = $2;
-	 body = List.rev $4 } }
+	 members = List.rev $4 } }
 
 
 stmt_list:

@@ -40,19 +40,36 @@ let check (globals, functions, structs) =
   in 
 
   (* Collect all struct names into one symbol table *)
-  let struct_decls = List.fold_left add_struct structs
+  let struct_defns = List.fold_left add_struct structs
   in
 
-  (* Build local symbol table of variables for this function *)
-  let structss = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
-                 StringMap.empty 
+  (* Return a struct from our symbol table *)
+  let find_struct s = 
+    try StringMap.find s struct_defns
+    with Not_found -> raise (Failure ("unrecognized struct " ^ s))
   in
-  
-  (* Return a variable from our local symbol table *)
-  let type_of_identifier s =
-    try StringMap.find s structss
-    with Not_found -> raise (Failure ("undeclared identifier " ^ s))
-  in
+
+  let check_struct the_struct =
+    check_binds "members" the_struct.members;
+    
+    (* Raise an exception if the given rvalue type cannot be assigned to
+      the given lvalue type *)
+    let check_assign lvaluet rvaluet err =
+       if lvaluet = rvaluet then lvaluet else raise (Failure err)
+    in   
+    
+    (* Build local symbol table of variables for this struct *)
+    let struct_symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
+      StringMap.empty (the_struct.members)
+    in
+  (* body of check_struct *)
+  { 
+    ssname = the_struct.sname;
+    smembers = match check_assign (Block the_struct.body) with
+    SBlock(sl) -> sl 
+    | _  -> raise (Failure ("internal error: block didn't become a block?"))
+  }
+  in 
 
   (**** Check functions ****)
 
@@ -211,4 +228,4 @@ let check (globals, functions, structs) =
 	SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
-  in (globals, List.map check_function functions, List.map ) (*map for types*)
+  in (globals, List.map check_function functions, StringMap.map check_struct structs) (*map for types*)

@@ -30,6 +30,11 @@ type sfunc_decl = {
     sbody : sstmt list;
   }
 
+type sstruct_defn = {
+  ssname: string;
+  smembers : bind list; 
+}
+
 type sprogram = bind list * sfunc_decl list
 
 (* Pretty-printing functions *)

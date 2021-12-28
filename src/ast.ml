@@ -39,7 +39,7 @@ type func_decl = {
 
   type struct_defn = {
     sname : string;
-    body : bind list;
+    members : bind list;
   }
 
 type program = bind list * func_decl list
