@@ -1,7 +1,7 @@
 (ocamllex scanner)      ; name of scanner .mll file
 (ocamlyacc microcparse) ; name of parser .mly file
 (executable
- (name microc)          ; build target is name.exe
+ (name compati)          ; build target is name.exe
  (libraries
   llvm
   llvm.analysis
