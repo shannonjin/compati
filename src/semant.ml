@@ -10,7 +10,7 @@ module StringMap = Map.Make(String)
 
    Check each global variable, then check each function *)
 
-let check (globals, functions) =
+let check (globals, functions, structs) =
 
   (* Verify a list of bindings has no void types or duplicate names *)
   let check_binds (kind : string) (binds : bind list) =
@@ -28,6 +28,31 @@ let check (globals, functions) =
   (**** Check global variables ****)
 
   check_binds "global" globals;
+
+  (* Add struct name to symbol table *)
+  let add_struct map st = 
+      let dup_err = "duplicate struct" ^ st.sname
+      and make_err er = raise (Failure er)
+      and n = st.sname 
+      in match st with 
+        _ when StringMap.mem n map -> make_err dup_err
+      | _  -> StringMap.add n st map 
+  in 
+
+  (* Collect all struct names into one symbol table *)
+  let struct_decls = List.fold_left add_struct structs
+  in
+
+  (* Build local symbol table of variables for this function *)
+  let structss = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
+                 StringMap.empty 
+  in
+  
+  (* Return a variable from our local symbol table *)
+  let type_of_identifier s =
+    try StringMap.find s structss
+    with Not_found -> raise (Failure ("undeclared identifier " ^ s))
+  in
 
   (**** Check functions ****)
 
@@ -67,33 +92,6 @@ let check (globals, functions) =
   in
 
   let _ = find_func "main" in (* Ensure "main" is defined *)
-
-  (* Add struct name to symbol table *)
-  let add_struct struct_map st= 
-    let built_in_err = "struct " ^ st.sname ^ " may not be defined"
-    and dup_err = "duplicate struct definition " ^ st.same
-    and make_err er = raise (Failure er)
-    and n = st.sname (* Name of the struct*)
-    in match st with (* No duplicate struct or redefinitions of built-ins *)
-         _ when StringMap.mem n built_in_decls -> make_err built_in_err
-       | _ when StringMap.mem n struct_map -> make_err dup_err  
-       | _ ->  StringMap.add n st struct_map 
-  in
-
-  (* Collect all function names into one symbol table *)
-  let struct_defns = List.fold_left add_struct structs
-  in
-
-  (* structs are type, function and other symbols are data
-  only declare structs at the beginning of the program (before everything else)
-  define the struct and then use it 
-  *)
-
-  
-  (* Build local symbol table of variables for this struct *)
-  let struct_symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
-  StringMap.empty (st.body )
-  in
 
   let check_function func =
     (* Make sure no formals or locals are void or duplicates *)
@@ -213,4 +211,4 @@ let check (globals, functions) =
 	SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
-  in (globals, List.map check_function functions) (*map for types*)
+  in (globals, List.map check_function functions, List.map ) (*map for types*)
