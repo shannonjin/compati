@@ -42,7 +42,7 @@ type func_decl = {
     members : bind list;
   }
 
-type program = bind list * func_decl list
+type program = struct_defn list * bind list * func_decl list
 
 (* Pretty-printing functions *)
 
