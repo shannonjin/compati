@@ -29,7 +29,12 @@ open Ast
 %%
 
 program:
-  decls EOF { $1 }
+  struct_decls decls EOF { ($1, fst $2, snd $2) } 
+
+struct_decls: 
+                             { [] }
+  | struct_decls struct_defn { $2 :: $1 }
+
 
 decls:
    /* nothing */ { ([], [])               }
