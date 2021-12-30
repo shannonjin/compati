@@ -10,7 +10,7 @@ module StringMap = Map.Make(String)
 
    Check each global variable, then check each function *)
 
-let check (globals, functions, structs) =
+let check (structs, globals, functions) =
 
   (* Verify a list of bindings has no void types or duplicate names *)
   let check_binds (kind : string) (binds : bind list) =
@@ -28,7 +28,7 @@ let check (globals, functions, structs) =
   (**** Check global variables ****)
 
   check_binds "global" globals;
-
+  
   (* Add struct name to symbol table *)
   let add_struct map st = 
       let dup_err = "duplicate struct" ^ st.sname
@@ -36,41 +36,8 @@ let check (globals, functions, structs) =
       and n = st.sname 
       in match st with 
         _ when StringMap.mem n map -> make_err dup_err
-      | _  -> StringMap.add n st map 
-  in 
-
-  (* Collect all struct names into one symbol table *)
-  let struct_defns = List.fold_left add_struct structs
-  in
-
-  (* Return a struct from our symbol table *)
-  let find_struct s = 
-    try StringMap.find s struct_defns
-    with Not_found -> raise (Failure ("unrecognized struct " ^ s))
-  in
-
-  let check_struct the_struct =
-    check_binds "members" the_struct.members;
-    
-    (* Raise an exception if the given rvalue type cannot be assigned to
-      the given lvalue type *)
-    let check_assign lvaluet rvaluet err =
-       if lvaluet = rvaluet then lvaluet else raise (Failure err)
-    in   
-    
-    (* Build local symbol table of variables for this struct *)
-    let struct_symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
-      StringMap.empty (the_struct.members)
-    in
-  (* body of check_struct *)
-  { 
-    ssname = the_struct.sname;
-    smembers = match check_assign (Block the_struct.body) with
-    SBlock(sl) -> sl 
-    | _  -> raise (Failure ("internal error: block didn't become a block?"))
-  }
-  in 
-
+      | _  -> StringMap.add n st.members map 
+in
   (**** Check functions ****)
 
   (* Collect function declarations for built-in functions: no bodies *)
@@ -228,4 +195,4 @@ let check (globals, functions, structs) =
 	SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
-  in (globals, List.map check_function functions, StringMap.map check_struct structs) (*map for types*)
+in (List.fold_left add_struct StringMap.empty structs, globals, List.map check_function functions)
