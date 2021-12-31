@@ -108,6 +108,12 @@ let string_of_fdecl fdecl =
   String.concat "" (List.map string_of_stmt fdecl.body) ^
   "}\n"
 
-let string_of_program (vars, funcs) =
+let string_of_struct st = 
+  st.sname ^ " {" ^
+  String.concat "" (List.map string_of_vdecl st.members) ^ "}\n"
+  
+
+let string_of_program (structs, vars, funcs) =
   String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
+  String.concat "\n" (List.map string_of_struct structs) ^ "\n" ^
   String.concat "\n" (List.map string_of_fdecl funcs)

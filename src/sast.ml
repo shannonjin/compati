@@ -1,6 +1,7 @@
 (* Semantically-checked Abstract Syntax Tree and functions for printing it *)
 
 open Ast
+module StringMap = Map.Make(String)
 
 type sexpr = typ * sx
 and sx =
@@ -30,12 +31,7 @@ type sfunc_decl = {
     sbody : sstmt list;
   }
 
-type sstruct_defn = {
-  ssname: string;
-  smembers : bind list; 
-}
-
-type sprogram = bind list * sfunc_decl list
+type sprogram = bind list StringMap.t * bind list * sfunc_decl list
 
 (* Pretty-printing functions *)
 
@@ -77,6 +73,11 @@ let string_of_sfdecl fdecl =
   String.concat "" (List.map string_of_sstmt fdecl.sbody) ^
   "}\n"
 
-let string_of_sprogram (vars, funcs) =
+let string_of_struct st = 
+  fst st ^ " {" ^
+  String.concat "" (List.map string_of_vdecl (snd st)) ^ "}\n"
+
+let string_of_sprogram (structs, vars, funcs) =
   String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
-  String.concat "\n" (List.map string_of_sfdecl funcs)
+  String.concat "\n" (List.map string_of_struct (StringMap.bindings structs)) ^ "\n" ^
+  String.concat "\n" (List.map string_of_sfdecl funcs) 
