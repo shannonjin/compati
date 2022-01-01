@@ -1,0 +1,9 @@
+struct test {
+    int i; 
+}
+
+int main () 
+{
+    print(19);
+    return 0;
+}
