@@ -1,5 +1,5 @@
 (ocamllex scanner)      ; name of scanner .mll file
-(ocamlyacc microcparse) ; name of parser .mly file
+(ocamlyacc compatiparse) ; name of parser .mly file
 (executable
  (name compati)          ; build target is name.exe
  (libraries
