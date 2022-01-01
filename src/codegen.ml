@@ -25,7 +25,7 @@ let translate (structs, globals, functions) =
   
   (* Create the LLVM compilation module into which
      we will generate code *)
-  let the_module = L.create_module context "MicroC" in
+  let the_module = L.create_module context "Compati" in
 
   (* Get types from the context *)
   let i32_t      = L.i32_type    context
@@ -45,8 +45,11 @@ let translate (structs, globals, functions) =
     | A.Struct(name) -> L.named_struct_type context name 
   in
 
-  let fill_structs = StringMap.iter (fun k v -> L.struct_set_body k v false ) structs 
-in
+  let () = 
+    StringMap.iter (fun k v -> L.struct_set_body (ltype_of_typ (A.Struct k)) 
+    (Array.of_list (List.map (fun (t,_)->  ltype_of_typ t) v)) false ) structs 
+  in
+
   (* Create a map of global variables after creating each *)
   let global_vars : L.llvalue StringMap.t =
     let global_var m (t, n) = 
