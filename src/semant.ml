@@ -91,7 +91,7 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
        the given lvalue type *)
     let check_assign lvaluet rvaluet err =
        if lvaluet = rvaluet then lvaluet else raise (Failure err)
-    in   
+    in
 
     (* Build local symbol table of variables for this function *)
     let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
@@ -104,6 +104,35 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
     in
 
+   (* MemberId(id, n) -> 
+      let container_type = resolve_user_type (type_of_id env id) user_types in
+      (match container_type with
+         Struct(_, blist) -> 
+         let (t, _) = List.find (fun (_, n') -> n' = n) blist in
+         resolve_user_type t user_types
+       | _ -> raise (Failure (string_of_id id  ^ " is not a struct type"))) 
+       
+        if lvaluet = rvaluet then lvaluet else raise (Failure err)
+    in  
+*)
+
+    let check_access lvaluet rvaluet err =
+      match lvaluet with 
+        Struct(b) -> 
+          let (t, _) = List.find ( fun (_, r') -> r' = (string_of_typ rvaluet) ) (StringMap.find b struct_defn_map) in t
+        | _ -> raise (Failure(err))
+    in
+    
+     
+   (* | StructAccess(s, m) as sacc ->
+      let sd = struct_decl (string_of_typ (strip (strip (expr s))))in
+      let members = List.fold_left (fun m (t,n,_,_) -> StringMap.add n t m) StringMap.empty
+     sd.members in
+      (* Iterate through the members of the struct; if name found, return its type, else fail *)
+      (try StringMap.find m members
+      with Not_found -> raise (Failure ("illegal member " ^ m ^ " of struct " ^ string_of_expr
+     sacc))) *)
+
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec expr = function
         Literal  l -> (Int, SLiteral l)
@@ -111,7 +140,13 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
       | BoolLit l  -> (Bool, SBoolLit l)
       | Noexpr     -> (Void, SNoexpr)
       | Id s       -> (type_of_identifier s, SId s)
-      | Assign(var, e) as ex -> 
+      | Access (n, e) as ex -> 
+        let lt = type_of_identifier n
+        and (rt, e') = expr e in
+        let err = "illegal access " ^ string_of_typ lt ^ " = " ^ 
+          string_of_typ rt ^ " in " ^ string_of_expr ex
+        in (check_access lt rt err, SAccess(n, (rt, e')))
+      | Assign(var, e) as ex ->  
           let lt = type_of_identifier var
           and (rt, e') = expr e in
           let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^ 
@@ -158,7 +193,6 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
           in 
           let args' = List.map2 check_call fd.formals args
           in (fd.typ, SCall(fname, args'))
-       (*| Access -> print_endline; *)
     in
 
     let check_bool_expr e = 
