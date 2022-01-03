@@ -18,6 +18,11 @@ open Sast
 
 module StringMap = Map.Make(String)
 
+let debug message =
+  if false
+  then prerr_endline message
+  else ()
+
 (* translate : Sast.program -> Llvm.module *)
 let translate (structs, globals, functions) =
 
@@ -36,18 +41,24 @@ let translate (structs, globals, functions) =
 
   in
 
+  let struct_cache = Hashtbl.create 10 in
+
   (* Return the LLVM type for a MicroC type *)
-  let ltype_of_typ = function
+  let rec ltype_of_typ = function
       A.Int   -> i32_t
     | A.Bool  -> i1_t
     | A.Float -> float_t
     | A.Void  -> void_t
-    | A.Struct(name) -> L.named_struct_type context name 
-  in
-
-  let () = 
-    StringMap.iter (fun k v -> L.struct_set_body (ltype_of_typ (A.Struct k)) 
-    (Array.of_list (List.map (fun (t,_)->  ltype_of_typ t) v)) false ) structs 
+    | A.Struct(name) -> 
+      let t = 
+        (try Hashtbl.find struct_cache name
+         with Not_found -> 
+           let struct_t = L.named_struct_type context name in
+           Hashtbl.add struct_cache name struct_t;
+           L.struct_set_body struct_t (Array.of_list (List.map ltype_of_typ (List.map fst (StringMap.find name structs)
+           ))) false;
+           struct_t) in
+      L.pointer_type t
   in
 
   (* Create a map of global variables after creating each *)
@@ -88,20 +99,36 @@ let translate (structs, globals, functions) =
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
     and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder in
 
+    let llstore lval laddr builder =
+      let ptr = L.build_pointercast laddr (L.pointer_type (L.type_of lval)) "" builder in
+      let store_inst = (L.build_store lval ptr builder) in
+      debug ((L.string_of_llvalue store_inst));
+      ()
+    in
+
     (* Construct the function's "locals": formal arguments and locally
        declared variables.  Allocate each on the stack, initialize their
        value, if appropriate, and remember their values in the "locals" map *)
     let local_vars =
-      let add_formal m (t, n) p = 
-        L.set_value_name n p;
+     let add_formal m (t, n) p = 
+        L.set_value_name n p; 
 	let local = L.build_alloca (ltype_of_typ t) n builder in
         ignore (L.build_store p local builder);
 	StringMap.add n local m 
 
       (* Allocate space for any locally declared variables and add the
-       * resulting registers to our map *)
+       * resulting registers to our map*)
       and add_local m (t, n) =
-	let local_var = L.build_alloca (ltype_of_typ t) n builder
+	let local_var = match t with 
+      A.Struct(n) -> 
+        let struct_ptr_t = ltype_of_typ t in
+        let struct_t = L.element_type struct_ptr_t in 
+        let struct_ptr = L.build_alloca struct_ptr_t n builder in 
+        let struct_val = L.build_malloc struct_t n builder in
+        ignore (llstore struct_val struct_ptr builder); 
+        struct_ptr
+     |_ -> L.build_alloca (ltype_of_typ t) n builder
+
 	in StringMap.add n local_var m 
       in
 

@@ -4,6 +4,7 @@ struct test {
 
 int main () 
 {
+    struct test wow;
     print(19);
     return 0;
 }
