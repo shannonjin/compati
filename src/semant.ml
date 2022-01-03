@@ -12,10 +12,11 @@ module StringMap = Map.Make(String)
 
 let check (structs, globals, functions) =
 
-  (* Verify a list of bindings has no void types or duplicate names *)
-  let check_binds (kind : string) (binds : bind list) =
+  (* Verify a list of bindings has no void types or duplicate names or uses an undefined struct *)
+  let check_binds (kind : string) (binds : bind list) map =
     List.iter (function
 	(Void, b) -> raise (Failure ("illegal void " ^ kind ^ " " ^ b))
+  | (Struct(b), _) -> if not (StringMap.mem b map) then raise (Failure ("undefined struct type member " ^ b))
       | _ -> ()) binds;
     let rec dups = function
         [] -> ()
@@ -27,8 +28,8 @@ let check (structs, globals, functions) =
 
   (**** Check global variables ****)
 
-  check_binds "global" globals;
-  
+  check_binds "global" globals StringMap.empty;
+
   (* Add struct name to symbol table *)
   let add_struct map st = 
       let dup_err = "duplicate struct" ^ st.sname
@@ -36,8 +37,12 @@ let check (structs, globals, functions) =
       and n = st.sname 
       in match st with 
         _ when StringMap.mem n map -> make_err dup_err
-      | _  -> StringMap.add n st.members map 
+      | _  -> check_binds n st.members map;
+      StringMap.add n st.members map 
 in
+
+let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
+
   (**** Check functions ****)
 
   (* Collect function declarations for built-in functions: no bodies *)
@@ -79,8 +84,8 @@ in
 
   let check_function func =
     (* Make sure no formals or locals are void or duplicates *)
-    check_binds "formal" func.formals;
-    check_binds "local" func.locals;
+    check_binds "formal" func.formals struct_defn_map;
+    check_binds "local" func.locals struct_defn_map;
 
     (* Raise an exception if the given rvalue type cannot be assigned to
        the given lvalue type *)
@@ -153,7 +158,7 @@ in
           in 
           let args' = List.map2 check_call fd.formals args
           in (fd.typ, SCall(fname, args'))
-      (*| Access() *)
+       (*| Access -> print_endline; *)
     in
 
     let check_bool_expr e = 
@@ -195,4 +200,4 @@ in
 	SBlock(sl) -> sl
       | _ -> raise (Failure ("internal error: block didn't become a block?"))
     }
-in (List.fold_left add_struct StringMap.empty structs, globals, List.map check_function functions)
+in (struct_defn_map, globals, List.map check_function functions)
