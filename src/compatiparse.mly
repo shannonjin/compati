@@ -95,11 +95,16 @@ expr_opt:
     /* nothing */ { Noexpr }
   | expr          { $1 }
 
+id_expr:
+    ID                 { SimpleId($1) }
+  | id_expr  DOT  ID   { AccessId($1, $3) }
+  /*| id_expr  LBRACKET expr RBRACKET { IndexId($1, $3) }*/
+
 expr:
     LITERAL          { Literal($1)            }
   | FLIT	           { Fliteral($1)           }
   | BLIT             { BoolLit($1)            }
-  | ID               { Id($1)                 }
+  | id_expr               { Id($1)                 }
   | expr PLUS   expr { Binop($1, Add,   $3)   }
   | expr MINUS  expr { Binop($1, Sub,   $3)   }
   | expr TIMES  expr { Binop($1, Mult,  $3)   }
@@ -117,7 +122,8 @@ expr:
   | ID ASSIGN expr   { Assign($1, $3)         }
   | ID LPAREN args_opt RPAREN { Call($1, $3)  }
   | LPAREN expr RPAREN { $2                   }
- /*| ID DOT           { Access($1)             } */
+  | ID DOT expr         { Access($1, $3)      } 
+  
 
 args_opt:
     /* nothing */ { [] }

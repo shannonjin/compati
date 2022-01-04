@@ -9,16 +9,21 @@ type typ = Int | Bool | Float | Void | Struct of string  (*struct that contains 
 
 type bind = typ * string
 
+type id = 
+    SimpleId of string
+  | AccessId of id * string
+  (*| IndexId of id * expr *)
+
 type expr =
     Literal of int   
   | Fliteral of string
   | BoolLit of bool
-  | Id of string
+  | Id of id
   | Binop of expr * op * expr
   | Unop of uop * expr
+  | Access of string * expr
   | Assign of string * expr
   | Call of string * expr list
-  (*| Access of string * expr *)
   | Noexpr
 
 type stmt =
@@ -64,16 +69,22 @@ let string_of_uop = function
     Neg -> "-"
   | Not -> "!"
 
+let rec string_of_id = function
+  SimpleId(s) -> s
+| AccessId(id, s) -> "Member(" ^ string_of_id id ^ ", " ^ s ^ ")"
+(*| IndexId(id, e) -> "Index(" ^ string_of_id id ^ ", " ^ string_of_expr e ^ ")" *)
+
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | Fliteral(l) -> l
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
-  | Id(s) -> s
+  | Id(s) -> "Id(" ^ string_of_id s ^ ")"
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_expr e2
   | Unop(o, e) -> string_of_uop o ^ string_of_expr e
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | Access(n, e) -> n ^ "." ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
   | Noexpr -> ""

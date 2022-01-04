@@ -104,18 +104,6 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
       with Not_found -> raise (Failure ("undeclared identifier " ^ s))
     in
 
-   (* MemberId(id, n) -> 
-      let container_type = resolve_user_type (type_of_id env id) user_types in
-      (match container_type with
-         Struct(_, blist) -> 
-         let (t, _) = List.find (fun (_, n') -> n' = n) blist in
-         resolve_user_type t user_types
-       | _ -> raise (Failure (string_of_id id  ^ " is not a struct type"))) 
-       
-        if lvaluet = rvaluet then lvaluet else raise (Failure err)
-    in  
-*)
-
     let check_access lvaluet rvaluet err =
       match lvaluet with 
         Struct(b) -> 
@@ -123,16 +111,6 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
         | _ -> raise (Failure(err))
     in
     
-     
-   (* | StructAccess(s, m) as sacc ->
-      let sd = struct_decl (string_of_typ (strip (strip (expr s))))in
-      let members = List.fold_left (fun m (t,n,_,_) -> StringMap.add n t m) StringMap.empty
-     sd.members in
-      (* Iterate through the members of the struct; if name found, return its type, else fail *)
-      (try StringMap.find m members
-      with Not_found -> raise (Failure ("illegal member " ^ m ^ " of struct " ^ string_of_expr
-     sacc))) *)
-
     (* Return a semantically-checked expression, i.e., with a type *)
     let rec expr = function
         Literal  l -> (Int, SLiteral l)
