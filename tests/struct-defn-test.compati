@@ -6,6 +6,6 @@ int main ()
 {
     struct test wow;
     wow.i = 1; 
-    print(2);
+    print(wow.i);
     return 0;
 }

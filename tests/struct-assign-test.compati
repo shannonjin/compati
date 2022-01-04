@@ -1,0 +1,21 @@
+struct test {
+    int i; 
+    int zig; 
+}
+
+int main () 
+{
+    struct test wow; 
+    struct test cow; 
+    wow.i = 18;
+    wow.zig = 1;
+
+    cow.i = wow.i;
+    cow.zig = 1;
+
+    print(wow.i);
+    print(cow.i);
+    print(wow.zig);
+    print(cow.zig);
+    return 0;
+}
