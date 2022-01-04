@@ -97,12 +97,14 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
     let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
 	                StringMap.empty (globals @ func.formals @ func.locals )
     in
-    
+    (*let scoped = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
+                 StringMap.empty
+    in 
     let rec string_of_id = function
       SimpleId(s) -> s
     | AccessId(id, _) -> string_of_id id 
     in
-    (* Return a variable from our local symbol table *)
+     Return a variable from our local symbol table *)
     let rec type_of_identifier = function
       SimpleId(s) -> 
         let t  = 
@@ -110,11 +112,11 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
           with Not_found -> raise (Failure ("undeclared identifier " ^ s)))
         in t 
       | AccessId(id, s) -> 
-        let st_type = (type_of_identifier id)  in
+        let st_type = type_of_identifier id in
         (match st_type with
            Struct(_)  ->  let t = 
-            (try List.find (fun (_, n') -> n' = s) (StringMap.find (string_of_id id) struct_defn_map)
-           with Not_found -> raise (Failure("undeclared identifier " ^ (string_of_id id) ^ "." ^ s))) 
+            (try List.find (fun (_, n') -> n' = s) (StringMap.find (string_of_typ st_type) struct_defn_map)
+           with Not_found -> raise (Failure("undeclared identifier " ^ (string_of_typ st_type) ^ "." ^ s))) 
           in fst t
          | _ -> raise (Failure (s ^ " is not a struct type"))) 
         
