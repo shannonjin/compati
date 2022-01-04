@@ -97,37 +97,38 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
     let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
 	                StringMap.empty (globals @ func.formals @ func.locals )
     in
-
-    (* Return a variable from our local symbol table *)
-    let type_of_identifier s =
-      try StringMap.find s symbols
-      with Not_found -> raise (Failure ("undeclared identifier " ^ s))
-    in
-
-    let check_access lvaluet rvaluet err =
-      match lvaluet with 
-        Struct(b) -> 
-          let (t, _) = List.find ( fun (_, r') -> r' = (string_of_typ rvaluet) ) (StringMap.find b struct_defn_map) in t
-        | _ -> raise (Failure(err))
-    in
     
+    let rec string_of_id = function
+      SimpleId(s) -> s
+    | AccessId(id, _) -> string_of_id id 
+    in
+    (* Return a variable from our local symbol table *)
+    let rec type_of_identifier = function
+      SimpleId(s) -> 
+        let t  = 
+          (try StringMap.find s symbols
+          with Not_found -> raise (Failure ("undeclared identifier " ^ s)))
+        in t 
+      | AccessId(id, s) -> 
+        let st_type = (type_of_identifier id)  in
+        (match st_type with
+           Struct(_)  ->  let t = 
+            (try List.find (fun (_, n') -> n' = s) (StringMap.find (string_of_id id) struct_defn_map)
+           with Not_found -> raise (Failure("undeclared identifier " ^ (string_of_id id) ^ "." ^ s))) 
+          in fst t
+         | _ -> raise (Failure (s ^ " is not a struct type"))) 
+        
     (* Return a semantically-checked expression, i.e., with a type *)
-    let rec expr = function
+    and expr = function
         Literal  l -> (Int, SLiteral l)
       | Fliteral l -> (Float, SFliteral l)
       | BoolLit l  -> (Bool, SBoolLit l)
       | Noexpr     -> (Void, SNoexpr)
       | Id s       -> (type_of_identifier s, SId s)
-      | Access (n, e) as ex -> 
-        let lt = type_of_identifier n
-        and (rt, e') = expr e in
-        let err = "illegal access " ^ string_of_typ lt ^ " = " ^ 
-          string_of_typ rt ^ " in " ^ string_of_expr ex
-        in (check_access lt rt err, SAccess(n, (rt, e')))
       | Assign(var, e) as ex ->  
           let lt = type_of_identifier var
           and (rt, e') = expr e in
-          let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^ 
+          let err = "illegal assignment = " ^ 
             string_of_typ rt ^ " in " ^ string_of_expr ex
           in (check_assign lt rt err, SAssign(var, (rt, e')))
       | Unop(op, e) as ex -> 

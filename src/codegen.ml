@@ -139,17 +139,40 @@ let translate (structs, globals, functions) =
 
     (* Return the value for a variable or formal argument.
        Check local names first, then global names *)
-    let lookup n = try StringMap.find n local_vars
-                   with Not_found -> StringMap.find n global_vars
-    in
-
-    let rec expr builder ((_, e) : sexpr) = match e with
+    let rec lookup x = 
+      begin match x with 
+      A.SimpleId(s) -> 
+        let return =  
+          (try StringMap.find s local_vars
+                   with Not_found -> StringMap.find s global_vars)
+        in return
+    | A.AccessId(id, field_id) -> 
+      let rec find_index_of field_id l =
+        match l with 
+        [] -> raise (Failure ("undeclared field " ^ field_id))
+      | hd :: tl -> if field_id = (snd hd)
+                       then 0
+                       else 1 + find_index_of field_id tl 
+     in
+      let struct_pp = lookup id in
+      let struct_addr = L.build_load struct_pp "" builder in
+      let the_struct = L.build_load struct_addr "" builder in
+      let struct_tname_opt = L.struct_name (L.type_of the_struct) in
+      (match struct_tname_opt with
+         None -> raise (Failure ("expected struct, found tuple"))
+       | Some(struct_tname) ->
+          let fields = StringMap.find struct_tname structs in
+          let idx = find_index_of field_id fields in
+          let addr = L.build_struct_gep struct_addr idx ("."^field_id) builder in
+          addr)
+       end in
+  let rec expr builder ((_, e) : sexpr) = match e with
 	SLiteral i  -> L.const_int i32_t i
       | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
       | SFliteral l -> L.const_float_of_string float_t l
       | SNoexpr     -> L.const_int i32_t 0
-      | SId s       -> L.build_load (lookup s) s builder
-      | SAccess (n, e) -> let(field_id, _) = (match e with 
+      | SId id       -> L.build_load (lookup id) "" builder
+      (*| SAccess (n, e) -> let(field_id, _) = (match e with 
         (_ ,Sast.SId id) -> (id, lookup id)
         |_ -> raise (Failure("illegal struct-type in codegen " ^ n))) in
         (*let fields  = StringMap.find n structs in*)
@@ -170,7 +193,7 @@ let translate (structs, globals, functions) =
             let fields = StringMap.find struct_tname structs in
             let idx = find_index_of field_id fields in
             let addr = L.build_struct_gep struct_addr idx ("."^field_id) builder in
-            addr)
+            addr) *)
       | SAssign (s, e) -> let e' = expr builder e in
                           ignore(L.build_store e' (lookup s) builder); e'
       | SBinop ((A.Float,_ ) as e1, op, e2) ->

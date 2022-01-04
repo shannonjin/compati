@@ -3,16 +3,15 @@
 open Ast
 module StringMap = Map.Make(String)
 
-type sexpr = typ * sx
+type sexpr = typ * sx 
 and sx =
     SLiteral of int
   | SFliteral of string
   | SBoolLit of bool
-  | SId of string
+  | SId of id
   | SBinop of sexpr * op * sexpr
   | SUnop of uop * sexpr
-  | SAccess of string * sexpr
-  | SAssign of string * sexpr
+  | SAssign of id * sexpr
   | SCall of string * sexpr list
   | SNoexpr
 
@@ -42,12 +41,11 @@ let rec string_of_sexpr (t, e) =
   | SBoolLit(true) -> "true"
   | SBoolLit(false) -> "false"
   | SFliteral(l) -> l
-  | SId(s) -> s
+  | SId(s) -> "Id(" ^ string_of_id s ^ ")"
   | SBinop(e1, o, e2) ->
       string_of_sexpr e1 ^ " " ^ string_of_op o ^ " " ^ string_of_sexpr e2
   | SUnop(o, e) -> string_of_uop o ^ string_of_sexpr e
-  | SAccess (n, e) -> n ^ "." ^ string_of_sexpr e
-  | SAssign(v, e) -> v ^ " = " ^ string_of_sexpr e
+  | SAssign(v, e) -> string_of_id v ^ " = " ^ string_of_sexpr e
   | SCall(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_sexpr el) ^ ")"
   | SNoexpr -> ""
