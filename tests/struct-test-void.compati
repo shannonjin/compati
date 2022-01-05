@@ -1,0 +1,9 @@
+struct dog {
+    int i;
+    int z;
+    void k;
+}
+int main () 
+{
+    struct dog w; 
+}
