@@ -5,6 +5,9 @@ Currently working on C style structs. Would like to add lists, strings, arrays. 
 Run these commands from the src folder after running ```dune build```
 
 ## Tests: 
+
+Note: if anything fails it might be because of a typo in the bash command on my part. 
+
 1. Struct declaration
 ```
 dune exec -- ./compati.exe ../tests/struct-decl-test.compati > struct-decl-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-decl-test.ll > struct-decl-test.s && gcc -o struct-decl-test.exe struct-decl-test.s && ./struct-decl-test.exe > struct-decl-test.out
