@@ -5,18 +5,23 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not
 
-type typ = Int | Bool | Float | Void | Struct of string  (*struct that contains an identifier (the string)*)
+type typ = Int | Bool | Float | Void | Char | String | Struct of string | Array of typ
+(*struct that contains an identifier (the string)*)
 
 type bind = typ * string
 
 type id = 
     SimpleId of string
-  | AccessId of id * string
-  (*| IndexId of id * expr *)
-
-type expr =
+  | MemberId of id * string
+  | IndexId of id * expr
+  (*| ArrayId of string *)
+  
+and expr =
     Literal of int   
   | Fliteral of string
+  | CharLit of char
+  | StringLit of string
+  | ArrayLit of expr list 
   | BoolLit of bool
   | Id of id
   | Binop of expr * op * expr
@@ -70,12 +75,15 @@ let string_of_uop = function
 
 let rec string_of_id = function
   SimpleId(s) -> s
-| AccessId(id, s) -> "Member(" ^ string_of_id id ^ ", " ^ s ^ ")"
-(*| IndexId(id, e) -> "Index(" ^ string_of_id id ^ ", " ^ string_of_expr e ^ ")" *)
+| MemberId(id, s) -> "Member(" ^ string_of_id id ^ ", " ^ s ^ ")"
+| _ -> "Index id"
 
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | Fliteral(l) -> l
+  | CharLit(l) -> String.make 1 l
+  | StringLit(l) -> l
+  | ArrayLit(arr) -> "[" ^ (List.fold_left (fun lst elem -> lst ^ " " ^ string_of_expr elem ^ ",") "" arr) ^ "]"
   | BoolLit(true) -> "true"
   | BoolLit(false) -> "false"
   | Id(s) -> "Id(" ^ string_of_id s ^ ")"
@@ -100,12 +108,15 @@ let rec string_of_stmt = function
       string_of_expr e3  ^ ") " ^ string_of_stmt s
   | While(e, s) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
 
-let string_of_typ = function
+let rec string_of_typ = function
     Int -> "int"
   | Bool -> "bool"
   | Float -> "float"
   | Void -> "void"
+  | Char -> "char"
   | Struct(name) -> name
+  | String -> "String"
+  | Array(t) -> (string_of_typ t) ^ "[ ]"
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 

@@ -37,8 +37,8 @@ let translate (structs, globals, functions) =
   and i8_t       = L.i8_type     context
   and i1_t       = L.i1_type     context
   and float_t    = L.double_type context
-  and void_t     = L.void_type   context 
-
+  and void_t     = L.void_type   context
+  and string_t   = L.pointer_type (L.i8_type context)
   in
 
   let struct_cache = Hashtbl.create 10 in
@@ -49,6 +49,9 @@ let translate (structs, globals, functions) =
     | A.Bool  -> i1_t
     | A.Float -> float_t
     | A.Void  -> void_t
+    | A.String -> string_t 
+    | A.Char -> i8_t 
+    | A.Array(t) -> L.array_type (ltype_of_typ t) 100
     | A.Struct(name) -> 
       let t = 
         (try Hashtbl.find struct_cache name
@@ -97,7 +100,9 @@ let translate (structs, globals, functions) =
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
+    (*and str_format_str = L.build_global_stringptr "%s\n" "fmt" builder *)
     and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder in
+    
 
     let llstore lval laddr builder =
       let ptr = L.build_pointercast laddr (L.pointer_type (L.type_of lval)) "" builder in
@@ -128,8 +133,8 @@ let translate (structs, globals, functions) =
         ignore (llstore struct_val struct_ptr builder); 
         struct_ptr
      |_ -> L.build_alloca (ltype_of_typ t) n builder
-
-	in StringMap.add n local_var m 
+    
+    in StringMap.add n local_var m 
       in
 
       let formals = List.fold_left2 add_formal StringMap.empty fdecl.sformals
@@ -137,6 +142,10 @@ let translate (structs, globals, functions) =
       List.fold_left add_local formals fdecl.slocals 
     in
 
+    let find_index exp = match exp 
+    with A.Literal(i) -> L.const_int i32_t i
+    | _ -> raise(Failure("must be numerical index"))
+  in
     (* Return the value for a variable or formal argument.
        Check local names first, then global names *)
     let rec lookup x = 
@@ -146,14 +155,24 @@ let translate (structs, globals, functions) =
           (try StringMap.find s local_vars
                    with Not_found -> StringMap.find s global_vars)
         in return
-    | A.AccessId(id, field_id) -> 
+   (* | A.ArrayId(s) -> 
+      let return =  
+        (try StringMap.find s local_vars
+                 with Not_found -> StringMap.find s global_vars)
+      in return *)
+    | A.IndexId(id, e) -> 
+      let array_pp = lookup id in (* ptr to ptr to array *)
+      let array_ptr = L.build_load array_pp "" builder in
+      let index = find_index e in 
+      L.build_gep array_ptr [|index|] "" builder 
+    | A.MemberId(id, field_id) -> 
       let rec find_index_of field_id l =
         match l with 
         [] -> raise (Failure ("undeclared field " ^ field_id))
       | hd :: tl -> if field_id = (snd hd)
                        then 0
                        else 1 + find_index_of field_id tl 
-     in
+      in
       let struct_pp = lookup id in
       let struct_addr = L.build_load struct_pp "" builder in
       let the_struct = L.build_load struct_addr "" builder in
@@ -165,35 +184,34 @@ let translate (structs, globals, functions) =
           let idx = find_index_of field_id fields in
           let addr = L.build_struct_gep struct_addr idx ("."^field_id) builder in
           addr)
-       end in
+  end in
   let rec expr builder ((_, e) : sexpr) = match e with
 	SLiteral i  -> L.const_int i32_t i
       | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0)
       | SFliteral l -> L.const_float_of_string float_t l
       | SNoexpr     -> L.const_int i32_t 0
       | SId id       -> L.build_load (lookup id) "" builder
-      (*| SAccess (n, e) -> let(field_id, _) = (match e with 
-        (_ ,Sast.SId id) -> (id, lookup id)
-        |_ -> raise (Failure("illegal struct-type in codegen " ^ n))) in
-        (*let fields  = StringMap.find n structs in*)
-        let rec find_index_of field_id l =
-          match l with 
-          [] -> raise (Failure ("undeclared field " ^ field_id))
-        | hd :: tl -> if field_id = (snd hd)
-                         then 0
-                         else 1 + find_index_of field_id tl 
-       in
-        let struct_pp = lookup n in
-        let struct_addr = L.build_load struct_pp n builder in
-        let the_struct = L.build_load struct_addr n builder in
-        let struct_tname_opt = L.struct_name (L.type_of the_struct) in
-        (match struct_tname_opt with
-           None -> raise (Failure ("expected struct, found tuple: " ^ n))
-         | Some(struct_tname) ->
-            let fields = StringMap.find struct_tname structs in
-            let idx = find_index_of field_id fields in
-            let addr = L.build_struct_gep struct_addr idx ("."^field_id) builder in
-            addr) *)
+      | SStringLit l -> L.build_global_stringptr l "str" builder
+      | SCharLit l -> L.const_int i8_t (Char.code l)
+      | SArrayLit elist ->  
+      if List.length elist == 0
+        then raise (Failure "Array cannot be empty")
+      else
+        let (elements) = List.map (fun a -> expr builder a) elist in
+        let ty =  ltype_of_typ (fst (List.hd elist)) in
+        let len = List.length elist in
+        let ptr = L.build_array_malloc
+        ty
+        (L.const_int i32_t len)
+        "" 
+        builder in
+        ignore (List.fold_left 
+                (fun i elem ->
+                  let ind = L.const_int i32_t i in
+                  let eptr = L.build_gep ptr [|ind|] "" builder in
+                  llstore elem eptr builder;
+                  i+1
+                ) 0 elements); (ptr)
       | SAssign (s, e) -> let e' = expr builder e in
                           ignore(L.build_store e' (lookup s) builder); e'
       | SBinop ((A.Float,_ ) as e1, op, e2) ->

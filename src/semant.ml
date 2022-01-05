@@ -1,4 +1,4 @@
-(* Semantic checking for the MicroC compiler *)
+(* Semantic checking for the Compati compiler *)
 
 open Ast
 open Sast
@@ -89,48 +89,79 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
 
     (* Raise an exception if the given rvalue type cannot be assigned to
        the given lvalue type *)
-    let check_assign lvaluet rvaluet err =
-       if lvaluet = rvaluet then lvaluet else raise (Failure err)
-    in
 
+    let check_assign lvaluet rvaluet err =
+
+      match lvaluet with
+       Array(t) ->
+          (match rvaluet with
+              Array(t') -> if (t == t') then lvaluet else raise (Failure "f2")
+            | _ -> raise (Failure "f1"))
+     | _ -> if lvaluet == rvaluet then lvaluet else raise (Failure err)
+
+    in
+ 
     (* Build local symbol table of variables for this function *)
     let symbols = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
 	                StringMap.empty (globals @ func.formals @ func.locals )
     in
-    (*let scoped = List.fold_left (fun m (ty, name) -> StringMap.add name ty m)
-                 StringMap.empty
-    in 
-    let rec string_of_id = function
-      SimpleId(s) -> s
-    | AccessId(id, _) -> string_of_id id 
-    in
-     Return a variable from our local symbol table *)
+    (* Return a variable from our local symbol table *)
     let rec type_of_identifier = function
       SimpleId(s) -> 
         let t  = 
           (try StringMap.find s symbols
           with Not_found -> raise (Failure ("undeclared identifier " ^ s)))
         in t 
-      | AccessId(id, s) -> 
+      | MemberId(id, s) -> 
         let st_type = type_of_identifier id in
         (match st_type with
            Struct(_)  ->  let t = 
             (try List.find (fun (_, n') -> n' = s) (StringMap.find (string_of_typ st_type) struct_defn_map)
            with Not_found -> raise (Failure("undeclared identifier " ^ (string_of_typ st_type) ^ "." ^ s))) 
           in fst t
-         | _ -> raise (Failure (s ^ " is not a struct type"))) 
+         | _ -> raise (Failure (s ^ " is not a struct type")))
+      | IndexId(id, _) ->
+        let container_type = type_of_identifier id in
+        match container_type with
+           Array(_) -> container_type (*To DO more types*)
+         | _ -> raise (Failure "Not an array")
+      
         
     (* Return a semantically-checked expression, i.e., with a type *)
-    and expr = function
+    and expr  = function
         Literal  l -> (Int, SLiteral l)
       | Fliteral l -> (Float, SFliteral l)
+      | CharLit l   -> (Char, SCharLit l)
+      | StringLit l -> (String, SStringLit l)
+      | ArrayLit elist  -> 
+        let tlist = List.map (fun a -> expr a) elist in
+        if (List.length tlist) = 0
+        then raise (Failure "Empty arrays not ok")
+        else
+          let typmatch t (ty, _) = 
+            if t == ty then
+              ty
+            else
+              raise (Failure ("array elements must be same type")) 
+          and slist = List.map (fun e -> expr e) elist in
+          (match slist with
+              [] -> raise (Failure "can't have 0 element array literal")
+            | _ -> 
+              let ty = List.fold_left typmatch (fst (List.hd slist)) slist in 
+              (Array(ty), SArrayLit(slist)) ) 
+            
+         (* let allMatch = List.hd tlist in
+          if List.for_all (fun t -> t = allMatch) tlist
+          then (Array(allMatch, List.length tlist), SArrayLit(tlist)))
+          else raise (Failure ("inconsistent types in array literal " 
+                               ^ string_of_expr ex))  *)
       | BoolLit l  -> (Bool, SBoolLit l)
       | Noexpr     -> (Void, SNoexpr)
       | Id s       -> (type_of_identifier s, SId s)
       | Assign(var, e) as ex ->  
           let lt = type_of_identifier var
           and (rt, e') = expr e in
-          let err = "illegal assignment = " ^ 
+          let err = "illegal assignment = " ^ string_of_typ lt ^ 
             string_of_typ rt ^ " in " ^ string_of_expr ex
           in (check_assign lt rt err, SAssign(var, (rt, e')))
       | Unop(op, e) as ex -> 

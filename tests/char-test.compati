@@ -1,0 +1,6 @@
+int main () 
+{
+    char h;
+    h = 'h';
+    return 0;
+}

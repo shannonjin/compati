@@ -5,10 +5,12 @@ open Ast
 %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA PLUS MINUS TIMES DIVIDE ASSIGN
-%token NOT EQ NEQ LT LEQ GT GEQ AND OR DOT
+%token NOT EQ NEQ LT LEQ GT GEQ AND OR DOT LBRACKET RBRACKET CHAR STRING
 %token RETURN IF ELSE FOR WHILE INT BOOL FLOAT VOID STRUCT
 %token <int> LITERAL
 %token <bool> BLIT
+%token <char> CHAR_LITERAL
+%token <string> STRING_LITERAL
 %token <string> ID FLIT
 %token EOF
 
@@ -63,6 +65,8 @@ typ:
   | FLOAT { Float }
   | VOID  { Void  }
   | STRUCT ID { Struct($2) }
+  | CHAR      { Char   }
+  | STRING    { String }
 
 vdecl_list:
     /* nothing */    { [] }
@@ -70,6 +74,8 @@ vdecl_list:
 
 vdecl:
    typ ID SEMI { ($1, $2) }
+   | typ ID LBRACKET RBRACKET {(Array($1), $2)}
+
 
 struct_defn:
   STRUCT ID LBRACE vdecl_list RBRACE      
@@ -97,13 +103,15 @@ expr_opt:
 
 id_expr:
     ID                 { SimpleId($1) }
-  | id_expr  DOT  ID   { AccessId($1, $3) }
-  /*| id_expr  LBRACKET expr RBRACKET { IndexId($1, $3) }*/
+  | id_expr  DOT  ID   { MemberId($1, $3) }
+  | id_expr  LBRACKET expr RBRACKET { IndexId($1, $3) } 
 
 expr:
     LITERAL          { Literal($1)            }
   | FLIT	           { Fliteral($1)           }
   | BLIT             { BoolLit($1)            }
+  | CHAR_LITERAL     { CharLit($1)            }
+  | STRING_LITERAL   { StringLit($1)          }
   | id_expr               { Id($1)                 }
   | expr PLUS   expr { Binop($1, Add,   $3)   }
   | expr MINUS  expr { Binop($1, Sub,   $3)   }
@@ -118,12 +126,15 @@ expr:
   | expr AND    expr { Binop($1, And,   $3)   }
   | expr OR     expr { Binop($1, Or,    $3)   }
   | MINUS expr %prec NOT { Unop(Neg, $2)      }
-  | NOT expr         { Unop(Not, $2)          }
-  | id_expr ASSIGN expr   { Assign($1, $3)         }
+  | NOT expr             { Unop(Not, $2)          }
+  | id_expr ASSIGN expr       { Assign($1, $3)    }
+  | id_expr ASSIGN array_lit               { Assign($1, $3)               }
   | ID LPAREN args_opt RPAREN { Call($1, $3)  }
   | LPAREN expr RPAREN { $2                   }
-  
 
+array_lit:
+  LBRACE args_opt RBRACE { ArrayLit($2) }
+ 
 args_opt:
     /* nothing */ { [] }
   | args_list  { List.rev $1 }

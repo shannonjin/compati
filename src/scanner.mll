@@ -1,4 +1,4 @@
-(* Ocamllex scanner for MicroC *)
+(* Ocamllex scanner for Compati *)
 
 { open Compatiparse }
 
@@ -12,6 +12,8 @@ rule token = parse
 | ')'      { RPAREN }
 | '{'      { LBRACE }
 | '}'      { RBRACE }
+| '['      { LBRACKET }
+| ']'      { RBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
 | '+'      { PLUS }
@@ -41,9 +43,13 @@ rule token = parse
 | "true"   { BLIT(true)  }
 | "false"  { BLIT(false) }
 | "struct" { STRUCT }
+| "string" { STRING }
+| "char"   { CHAR }
 | digits as lxm { LITERAL(int_of_string lxm) }
 | digits '.'  digit* ( ['e' 'E'] ['+' '-']? digits )? as lxm { FLIT(lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*     as lxm { ID(lxm) }
+| ''' (_ as ch) ''' { CHAR_LITERAL(ch) }
+| '"' ([^ '"']* as str) '"' { STRING_LITERAL(str) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 

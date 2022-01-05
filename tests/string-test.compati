@@ -1,0 +1,6 @@
+int main () 
+{
+    string hello;
+    hello = "Hello world!";
+    return 0;
+}
