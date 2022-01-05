@@ -51,7 +51,7 @@ let translate (structs, globals, functions) =
     | A.Void  -> void_t
     | A.String -> string_t 
     | A.Char -> i8_t 
-    | A.Array(t) -> L.array_type (ltype_of_typ t) 100
+    | A.Array(t, s) -> L.array_type (ltype_of_typ t) s
     | A.Struct(name) -> 
       let t = 
         (try Hashtbl.find struct_cache name
@@ -142,11 +142,11 @@ let translate (structs, globals, functions) =
       List.fold_left add_local formals fdecl.slocals 
     in
 
-    let find_index exp = match exp 
+   (* let find_index exp = match exp 
     with A.Literal(i) -> L.const_int i32_t i
     | _ -> raise(Failure("must be numerical index"))
   in
-    (* Return the value for a variable or formal argument.
+     Return the value for a variable or formal argument.
        Check local names first, then global names *)
     let rec lookup x = 
       begin match x with 
@@ -155,16 +155,10 @@ let translate (structs, globals, functions) =
           (try StringMap.find s local_vars
                    with Not_found -> StringMap.find s global_vars)
         in return
-   (* | A.ArrayId(s) -> 
-      let return =  
-        (try StringMap.find s local_vars
-                 with Not_found -> StringMap.find s global_vars)
-      in return *)
-    | A.IndexId(id, e) -> 
-      let array_pp = lookup id in (* ptr to ptr to array *)
-      let array_ptr = L.build_load array_pp "" builder in
-      let index = find_index e in 
-      L.build_gep array_ptr [|index|] "" builder 
+    | A.IndexId(id, i) -> 
+      let indices = [|L.const_int i32_t 0; L.const_int i32_t i|] in
+      let ref = L.build_gep (lookup id) indices "" builder in
+      (L.build_load ref "" builder)
     | A.MemberId(id, field_id) -> 
       let rec find_index_of field_id l =
         match l with 
@@ -199,10 +193,9 @@ let translate (structs, globals, functions) =
       else
         let (elements) = List.map (fun a -> expr builder a) elist in
         let ty =  ltype_of_typ (fst (List.hd elist)) in
-        let len = List.length elist in
         let ptr = L.build_array_malloc
         ty
-        (L.const_int i32_t len)
+        (L.const_int i32_t 1)
         "" 
         builder in
         ignore (List.fold_left 
@@ -212,8 +205,16 @@ let translate (structs, globals, functions) =
                   llstore elem eptr builder;
                   i+1
                 ) 0 elements); (ptr)
-      | SAssign (s, e) -> let e' = expr builder e in
-                          ignore(L.build_store e' (lookup s) builder); e'
+      | SAssign (s, e) -> 
+        let e' = expr builder e in
+        (match s with 
+        A.IndexId(id, index) -> 
+          let i' = L.const_int i32_t index in
+          let ex' = expr builder e in
+          let indices = [|L.const_int i32_t 0; i'|] in 
+          let ref = L.build_gep (lookup id) indices "" builder in
+          ignore(L.build_store ex' ref builder); ex'
+        | _ ->  ignore(L.build_store e' (lookup s) builder); e' ) 
       | SBinop ((A.Float,_ ) as e1, op, e2) ->
 	  let e1' = expr builder e1
 	  and e2' = expr builder e2 in

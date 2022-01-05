@@ -74,7 +74,7 @@ vdecl_list:
 
 vdecl:
    typ ID SEMI { ($1, $2) }
-  | typ ID LBRACKET RBRACKET SEMI {(Array($1), $2)}
+  | typ ID LBRACKET LITERAL RBRACKET SEMI {(Array($1, $4), $2)}
 
 
 struct_defn:
@@ -104,7 +104,7 @@ expr_opt:
 id_expr:
     ID                 { SimpleId($1) }
   | id_expr  DOT  ID   { MemberId($1, $3) }
-  | id_expr  LBRACKET expr RBRACKET { IndexId($1, $3) } 
+  | id_expr  LBRACKET LITERAL RBRACKET { IndexId($1, $3) } 
 
 expr:
     LITERAL          { Literal($1)            }

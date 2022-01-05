@@ -5,7 +5,7 @@ type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq |
 
 type uop = Neg | Not
 
-type typ = Int | Bool | Float | Void | Char | String | Struct of string | Array of typ
+type typ = Int | Bool | Float | Void | Char | String | Struct of string | Array of typ * int
 (*struct that contains an identifier (the string)*)
 
 type bind = typ * string
@@ -13,7 +13,7 @@ type bind = typ * string
 type id = 
     SimpleId of string
   | MemberId of id * string
-  | IndexId of id * expr
+  | IndexId of id * int
   (*| ArrayId of string *)
   
 and expr =
@@ -116,7 +116,7 @@ let rec string_of_typ = function
   | Char -> "char"
   | Struct(name) -> name
   | String -> "String"
-  | Array(t) -> (string_of_typ t) ^ "[ ]"
+  | Array(t, _) -> (string_of_typ t) ^ "[]"
 
 let string_of_vdecl (t, id) = string_of_typ t ^ " " ^ id ^ ";\n"
 

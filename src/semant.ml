@@ -91,13 +91,14 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
        the given lvalue type *)
 
     let check_assign lvaluet rvaluet err =
+      (*if lvaluet == rvaluet then lvaluet else raise (Failure err) *)
 
       match lvaluet with
-       Array(t) ->
+       Array(t, _) ->
           (match rvaluet with
-              Array(t') -> if (t == t') then lvaluet else raise (Failure "f2")
-            | _ -> raise (Failure "f1"))
-     | _ -> if lvaluet == rvaluet then lvaluet else raise (Failure err)
+              Array(t', _) -> if (t == t') then lvaluet else raise (Failure "f2")
+            | _ -> if rvaluet == t then lvaluet else raise (Failure ("f1")))
+     | _ -> if lvaluet == rvaluet then lvaluet else raise (Failure err) 
 
     in
  
@@ -148,7 +149,7 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
               [] -> raise (Failure "can't have 0 element array literal")
             | _ -> 
               let ty = List.fold_left typmatch (fst (List.hd slist)) slist in 
-              (Array(ty), SArrayLit(slist)) ) 
+              (Array(ty, List.length elist), SArrayLit(slist)) ) 
             
          (* let allMatch = List.hd tlist in
           if List.for_all (fun t -> t = allMatch) tlist
