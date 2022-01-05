@@ -33,3 +33,5 @@ dune exec -- ./compati.exe ../tests/char-test.compati > char-test.ll && /usr/loc
  ```
 dune exec -- ./compati.exe ../tests/array-test-1.compati > array-test-1.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic array-test-1.ll > array-test-1.s && gcc -o array-test-1.exe array-test-1.s && ./array-test-1.exe > array-test-1.out
  ```
+ 
+ Final report: https://docs.google.com/document/d/1-Rf-jKuwo3Hb1Yuon1iwI6_uqQ8DNLo_-8Y9NBVwZtg/edit?usp=sharing
