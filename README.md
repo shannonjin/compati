@@ -49,6 +49,12 @@ dune exec -- ./compati.exe ../tests/struct-test-void.compati > struct-test-void.
 
 11. Struct expr test (testing struct assignment with expressions)
 ```
-dune exec -- ./compati.exe ../tests/struct-expr-test.compati > struct-expr-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-expr-test.ll > struct-expr-test.s && gcc -o struct-expr-test.exe struct-expr-test.s && ./struct-expr-test.exe > struct-expr-test.outs
+dune exec -- ./compati.exe ../tests/struct-expr-test.compati > struct-expr-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-expr-test.ll > struct-expr-test.s && gcc -o struct-expr-test.exe struct-expr-test.s && ./struct-expr-test.exe > struct-expr-test.out
 ```
+
+12. Struct in struct test 
+```
+dune exec -- ./compati.exe ../tests/struct-in-struct.compati > struct-expr-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-in-struct.ll > struct-in-struct.s && gcc -o struct-in-struct.exe struct-expr-test.s && ./struct-in-struct.exe > struct-in-struct.out
+```
+
  Final report: https://docs.google.com/document/d/1-Rf-jKuwo3Hb1Yuon1iwI6_uqQ8DNLo_-8Y9NBVwZtg/edit?usp=sharing
