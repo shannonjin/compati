@@ -26,5 +26,5 @@ dune exec -- ./compati.exe ../tests/string-test.compati > string-test.ll && /usr
 
 6. Char test 
 ```
- dune exec -- ./compati.exe ../tests/char-test.compati > ../tests/char-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic ../tests/char-test.ll > ../tests/char-test.s && gcc -o ../tests/char-test.exe ../tests/char-test.s && ./char-test.exe > ../tests/char-test.out
+ dune exec -- ./compati.exe ../tests/char-test.compati > char-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic char-test.ll > ../tests/char-test.s && gcc -o ../tests/char-test.exe ../tests/char-test.s && ./char-test.exe > ../tests/char-test.out
  ```
