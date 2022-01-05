@@ -6,7 +6,7 @@ Run these commands from the src folder after running ```dune build```
 
 ## Tests: 
 
-Note: if anything fails it might be because of a typo in the bash command on my part. 
+Note: if anything fails it might be because of a typo in the bash command on my part. You can also run any files ending in .mc (subsititute appropriately) with these bash commands 
 
 1. Struct declaration
 ```
