@@ -42,8 +42,8 @@ dune exec -- ./compati.exe ../tests/struct-test-fail.compati > struct-test-fail.
 dune exec -- ./compati.exe ../tests/struct-test-fail2.compati > struct-test-fail2.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-test-fail2.ll > struct-test-fail2.s && gcc -o struct-test-fail2.exe struct-test-fail2.s && ./struct-test-fail2.exe > struct-test-fail2.out
 ```
 
-10. Struct fail 3 (void members)
+10. Struct fail void test (void members)
 ```
-dune exec -- ./compati.exe ../tests/struct-test-fail3.compati > struct-test-fail3.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-test-fail3.ll > struct-test-fail3.s && gcc -o struct-test-fail3.exe struct-test-fail3.s && ./struct-test-fail3.exe > struct-test-fail3.out
+dune exec -- ./compati.exe ../tests/struct-test-fail3.compati > struct-test-void.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-test-fail-void.ll > struct-test-void.s && gcc -o struct-test-void.exe struct-test-void.s && ./struct-test-void.exe > struct-test-void.out
 ```
  Final report: https://docs.google.com/document/d/1-Rf-jKuwo3Hb1Yuon1iwI6_uqQ8DNLo_-8Y9NBVwZtg/edit?usp=sharing
