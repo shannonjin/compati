@@ -35,6 +35,6 @@ dune exec -- ./compati.exe ../tests/array-test-1.compati > array-test-1.ll && /u
  ```
 8. Struct fail test (checking semant.ml's ability to error check a struct)
 ```
-dune exec -- ./compati.exe ../tests/struct-test-fail.compati > struct-test-fail.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic array-test-1.ll > struct-test-fail.s && gcc -o array-test-1.exe array-test-1.s && ./struct-test-fail.exe > array-test-1.out
+dune exec -- ./compati.exe ../tests/struct-test-fail.compati > struct-test-fail.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic array-test-1.ll > struct-test-fail.s && gcc -o array-test-1.exe struct-test-fail.s && ./struct-test-fail.exe > struct-test-fail.out
 ```
  Final report: https://docs.google.com/document/d/1-Rf-jKuwo3Hb1Yuon1iwI6_uqQ8DNLo_-8Y9NBVwZtg/edit?usp=sharing
