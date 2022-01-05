@@ -92,13 +92,14 @@ let struct_defn_map = List.fold_left add_struct StringMap.empty structs in
 
     let check_assign lvaluet rvaluet err =
       (*if lvaluet == rvaluet then lvaluet else raise (Failure err) *)
-
       match lvaluet with
        Array(t, _) ->
           (match rvaluet with
               Array(t', _) -> if (t == t') then lvaluet else raise (Failure "f2")
             | _ -> if rvaluet == t then lvaluet else raise (Failure ("f1")))
-     | _ -> if lvaluet == rvaluet then lvaluet else raise (Failure err) 
+     | _ ->
+      if (String.contains (string_of_typ rvaluet) '[' ) then lvaluet 
+      else if lvaluet == rvaluet then lvaluet else raise (Failure err) 
 
     in
  
