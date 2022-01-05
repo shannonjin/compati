@@ -51,4 +51,8 @@ dune exec -- ./compati.exe ../tests/struct-test-void.compati > struct-test-void.
 ```
 dune exec -- ./compati.exe ../tests/struct-expr-test.compati > struct-expr-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-expr-test.ll > struct-expr-test.s && gcc -o struct-expr-test.exe struct-expr-test.s && ./struct-expr-test.exe > struct-expr-test.out
 ```
+12. Struct member comparison test 
+```
+dune exec -- ./compati.exe ../tests/struct-comp.compati > struct-comp.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-comp.ll > struct-comp.s && gcc -o struct-comp.exe struct-comp.s && ./struct-comp.exe > struct-comp.out
+```
 Final report: https://docs.google.com/document/d/1-Rf-jKuwo3Hb1Yuon1iwI6_uqQ8DNLo_-8Y9NBVwZtg/edit?usp=sharing
