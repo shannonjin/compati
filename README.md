@@ -28,3 +28,8 @@ dune exec -- ./compati.exe ../tests/string-test.compati > string-test.ll && /usr
 ```
 dune exec -- ./compati.exe ../tests/char-test.compati > char-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic char-test.ll > char-test.s && gcc -o char-test.exe char-test.s && ./char-test.exe > char-test.out
  ```
+
+7. Array test
+ ```
+dune exec -- ./compati.exe ../tests/array-test-1.compati > array-test-1.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic array-test-1.ll > array-test-1.s && gcc -o array-test-1.exe array-test-1.s && ./array-test-1.exe > array-test-1.out
+ ```
