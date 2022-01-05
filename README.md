@@ -23,3 +23,8 @@ dune exec -- ./compati.exe ../tests/struct-assign-test.compati > t.ll && /usr/lo
 ```
 dune exec -- ./compati.exe ../tests/string-test.compati > string-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic string-test.ll > string-test.s && gcc -o string-test.exe string-test.s && ./string-test.exe > string-test.out
 ```
+
+6. Char test 
+```
+ dune exec -- ./compati.exe ../tests/char-test.compati > ../tests/char-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic ../tests/char-test.ll > ../tests/char-test.s && gcc -o ../tests/char-test.exe ../tests/char-test.s && ./char-test.exe > ../tests/char-test.out
+ ```
