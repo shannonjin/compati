@@ -4,7 +4,7 @@ Currently working on C style structs. Would like to add lists, strings, arrays. 
 
 Run these commands from the src folder after running ```dune build```
 
-Tests: 
+## Tests: 
 1. Struct declaration
 ```
 dune exec -- ./compati.exe ../tests/struct-decl-test.compati > struct-decl-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-decl-test.ll > struct-decl-test.s && gcc -o struct-decl-test.exe struct-decl-test.s && ./struct-decl-test.exe > struct-decl-test.out
@@ -49,6 +49,6 @@ dune exec -- ./compati.exe ../tests/struct-test-void.compati > struct-test-void.
 
 11. Struct expr test (testing struct assignment with expressions)
 ```
-dune exec -- ./compati.exe ../tests/struct-expr-test.compati > struct-expr-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-test-fail-void.ll > struct-expr-test.s && gcc -o struct-expr-test.exe struct-expr-test.s && ./struct-expr-test.exe > struct-expr-test.out
+dune exec -- ./compati.exe ../tests/struct-expr-test.compati > struct-expr-test.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-expr-test.ll > struct-expr-test.s && gcc -o struct-expr-test.exe struct-expr-test.s && ./struct-expr-test.exe > struct-expr-test.outs
 ```
  Final report: https://docs.google.com/document/d/1-Rf-jKuwo3Hb1Yuon1iwI6_uqQ8DNLo_-8Y9NBVwZtg/edit?usp=sharing
