@@ -74,7 +74,7 @@ vdecl_list:
 
 vdecl:
    typ ID SEMI { ($1, $2) }
-   | typ ID LBRACKET RBRACKET {(Array($1), $2)}
+  | typ ID LBRACKET RBRACKET SEMI {(Array($1), $2)}
 
 
 struct_defn:
