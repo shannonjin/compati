@@ -1,0 +1,21 @@
+struct owner {
+    int age; 
+}
+
+struct cat {
+    int age;
+}
+
+int main () 
+{
+    struct cat meow;
+    struct owner dad;
+
+    dad.age = 50;
+    meow.age = 2;
+
+    if ((dad.age) > (meow.age)) print(1); 
+    
+    return 0;
+
+}
