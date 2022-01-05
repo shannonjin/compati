@@ -33,8 +33,17 @@ dune exec -- ./compati.exe ../tests/char-test.compati > char-test.ll && /usr/loc
  ```
 dune exec -- ./compati.exe ../tests/array-test-1.compati > array-test-1.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic array-test-1.ll > array-test-1.s && gcc -o array-test-1.exe array-test-1.s && ./array-test-1.exe > array-test-1.out
  ```
-8. Struct fail test (checking semant.ml's ability to error check a struct)
+8. Struct fail test (checking semant.ml's ability to detect when someone try's to use an accessor (.) on a nonstruct variable)
 ```
 dune exec -- ./compati.exe ../tests/struct-test-fail.compati > struct-test-fail.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic array-test-1.ll > struct-test-fail.s && gcc -o array-test-1.exe struct-test-fail.s && ./struct-test-fail.exe > struct-test-fail.out
+```
+9. Struct fail test 2  (duplicate members in struct)
+```
+dune exec -- ./compati.exe ../tests/struct-test-fail2.compati > struct-test-fail2.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-test-fail2.ll > struct-test-fail2.s && gcc -o struct-test-fail2.exe struct-test-fail2.s && ./struct-test-fail2.exe > struct-test-fail2.out
+```
+
+10. Struct fail 3 (void members)
+```
+dune exec -- ./compati.exe ../tests/struct-test-fail3.compati > struct-test-fail3.ll && /usr/local/opt/llvm/bin/llc -relocation-model=pic struct-test-fail3.ll > struct-test-fail3.s && gcc -o struct-test-fail3.exe struct-test-fail3.s && ./struct-test-fail3.exe > struct-test-fail3.out
 ```
  Final report: https://docs.google.com/document/d/1-Rf-jKuwo3Hb1Yuon1iwI6_uqQ8DNLo_-8Y9NBVwZtg/edit?usp=sharing
